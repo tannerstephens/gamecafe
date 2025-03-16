@@ -1,3 +1,4 @@
 .secret_key
 *.db
 *.sqlite
+.bash_history

@@ -27,6 +27,4 @@ def create_app(config="gamecafe.config.Config") -> Flask:
     def not_found(e):
         return render_template("pages/404.jinja")
 
-    print(app.url_map)
-
     return app
