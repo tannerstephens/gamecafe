@@ -11,6 +11,7 @@ psycopg = "*"
 boto3 = "*"
 requests = "*"
 requests-cache = "*"
+gunicorn = "*"
 
 [dev-packages]
 
