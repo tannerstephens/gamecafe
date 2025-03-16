@@ -1,0 +1,11 @@
+{% with messages = get_flashed_messages(with_categories=True) %}
+{% if messages %}
+<script lang="js">
+    let duration = 2000;
+    {% for category, message in messages %}
+    bulmaToast.toast({ message: "{{message}}", type: "is-{{category}}", position: "top-center", animate: { in: 'slideInDown', out: 'slideOutUp' }, duration });
+    duration += 750
+    {% endfor %}
+</script>
+{% endif %}
+{% endwith %}

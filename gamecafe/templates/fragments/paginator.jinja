@@ -1,0 +1,7 @@
+<nav class="pagination" role="navigation" aria-label="pagination">
+    <a class="pagination-previous {% if page.previous_page is none %}is-disabled"
+        title="This is the first page{% endif %}" {% if page.previous_page is not none %}href="{{ request.path }}?p={{ page.previous_page }}"{% endif %}>Previous</a>
+    <a class="pagination-next {% if page.next_page is none %}is-disabled"
+        title="This is the last page{% endif %}" {% if page.next_page is not none %}href="{{ request.path }}?p={{ page.next_page }}"{% endif %}>Next page</a>
+    <div class="pagination-list">Page {{ page.current_page }} of {{ page.page_count }}</div>
+</nav>

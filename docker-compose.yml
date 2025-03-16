@@ -1,0 +1,12 @@
+services:
+  gamecafe:
+    image: trainrex/gamecafe
+    restart: unless-stopped
+    environment:
+      - DATABASE_URI=postgresql+psycopg://postgres:changeme@database:5432/postgres
+  database:
+    image: postgres
+    restart: on-failure
+    shm_size: 128mb
+    environment:
+      - POSTGRES_PASSWORD=changeme

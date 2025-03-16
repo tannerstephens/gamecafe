@@ -1,0 +1,53 @@
+{% set navbar = false %}
+{% extends "_base.jinja" %}
+{% block header %}
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock header %}
+
+{% block content %}
+{% include 'fragments/back-button.html' %}
+<section class="section">
+    <div class="container">
+
+        <div class="columns is-centered">
+            <div class="column is-one-quarter-fullhd is-one-third-widescreen is-half-desktop">
+                <div class="block has-text-centered">
+                    <figure class="image is-128x128 is-inline-block">
+                        <img src="https://bulma.io/assets/images/placeholders/256x256.png" />
+                    </figure>
+
+                    <div class="block is-size-3">Sign in to GameCafe</div>
+                </div>
+
+                <div class="box">
+                    <form method="post" id="loginForm">
+                        <div class="field">
+                            <label class="label">Username</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" name="username">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Password</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="password" name="password">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="control">
+                            <button class="button is-primary is-fullwidth" type="submit">Login</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+</section>
+{% endblock content %}

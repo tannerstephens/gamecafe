@@ -1,0 +1,36 @@
+html {
+    background-color: #e1e1e1;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+#bgg {
+    height: 80px;
+}
+
+.gameimage {
+    height: 480px !important;
+    width: auto !important;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.card {
+    height: 100%;
+}
+
+.card-image {
+    background-color: #bdbdbd;
+    border-top-left-radius: var(--bulma-card-radius);
+    border-top-right-radius: var(--bulma-card-radius);
+}

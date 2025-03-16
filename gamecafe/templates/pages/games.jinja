@@ -1,0 +1,37 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+<script src="{{ url_for('static', filename='js/games.js') }}"></script>
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-multiline">
+            {% for game in page.items %}
+            <div class="column is-one-third">
+                <div class="card">
+                    <div class="card-image">
+                        <figure class="image">
+                        <img
+                            src="/games/{{ game.bgg_id }}/image"
+                            alt="{{ game.name }} Image"
+                            class="gameimage"
+                            loading="lazy"
+                        />
+                        </figure>
+                    </div>
+                    <div class="card-content">
+                        <h2 class="title is-4">{{ game.name }}</h2>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="box">
+        {% include 'fragments/paginator.jinja' %}
+        </div>
+    </div>
+</section>
+{% endblock content %}

@@ -1,0 +1,67 @@
+{% set navbar = false %}
+{% extends "_base.jinja" %}
+{% block header %}
+<script src="{{ url_for('static', filename='js/register.js') }}"></script>
+{% endblock header %}
+{% block content %}
+{% include 'fragments/back-button.html' %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-one-quarter-fullhd is-one-third-widescreen is-half-desktop">
+                <div class="block has-text-centered">
+                    <figure class="image is-128x128 is-inline-block">
+                        <img src="https://bulma.io/assets/images/placeholders/256x256.png" />
+                    </figure>
+
+                    <div class="block is-size-3">Create An Account</div>
+                </div>
+
+                <div class="box">
+                    <form method="post" id="registerForm">
+                        <div class="field">
+                            <label class="label">Email</label>
+                            <div class="control has-icons-left">
+                                <input class="input {% if email_taken %}is-danger{% endif %}" type="text" name="email">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                            </div>
+                            {% if email_taken %}
+                            <p class="help is-danger">This email is not available</p>
+                            {% endif %}
+                        </div>
+                        <div class="field">
+                            <label class="label">Username</label>
+                            <div class="control has-icons-left">
+                                <input class="input {% if username_taken %}is-danger{% endif %}" type="text"
+                                    name="username">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                            {% if username_taken %}
+                            <p class="help is-danger">This username is not available</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Password</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="password" name="password">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="control">
+                            <button class="button is-primary is-fullwidth" type="submit">Register</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+</section>
+{% endblock content %}

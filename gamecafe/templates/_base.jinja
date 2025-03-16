@@ -1,0 +1,50 @@
+{% set navbar = navbar|default(true) %}
+<!DOCTYPE html>
+<html data-theme="light">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>GameCafe{% if subtitle is defined %} | {{subtitle}}{% endif %}</title>
+
+    <link rel="shortcut icon" type="image/ico" href="{{ url_for('static', filename='/img/favicon.ico') }}" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.3/css/bulma.min.css"
+        integrity="sha256-RwYNyYLkMTjyYn8FRzVzQFtHXuHg9dpfkPCuf6j2XDM=" crossorigin="anonymous">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bulma-toast/2.4.4/bulma-toast.min.js"
+        integrity="sha512-Mblf9e5nxLeT5MxzmcT1L3Esj3sBqKxAXgq+SQUf0/eaJTBvx2RXA+VP3Qjpg2zDAYSSc/j6n1Gf6oU0CW2tqw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    {% block header %}
+    {% endblock %}
+</head>
+
+<body>
+    <main>
+        {% include 'fragments/flash.jinja' %}
+        {% if navbar %}{% include 'fragments/navbar.jinja' %}{% endif %}
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer has-text-right">
+        <nav class="level">
+            <div class="level-left">
+                <div class="level-item">Made with ❤️ - 2025</div>
+            </div>
+            <div class="level-right">
+                <p class="level-item">
+                    <a href="https://boardgamegeek.com/" target="_blank">
+                        <img src="{{ url_for('static', filename='img/powered-by-bgg.webp') }}" id="bgg" />
+                    </a>
+                </p>
+            </div>
+        </nav>
+    </footer>
+</body>
+
+</html>

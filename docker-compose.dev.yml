@@ -1,0 +1,40 @@
+services:
+  gamecafe:
+    image: trainrex/gamecafe
+    build: .
+    command: "python dev.py"
+    environment:
+      - DATABASE_URI=postgresql+psycopg://postgres:postgres@database:5432/postgres
+    volumes:
+      - .:/home/appuser
+      - gamecafe-data:/data
+    restart: on-failure
+    user: "${MY_UID}:${MY_GID}"
+    ports:
+      - 80:80
+  database:
+    image: postgres
+    restart: on-failure
+    shm_size: 128mb
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  # minio:
+  #   image: quay.io/minio/minio
+  #   volumes:
+  #     - minio-data:/data
+  #   environment:
+  #     - MINIO_ROOT_USER=minio
+  #     - MINIO_ROOT_PASSWORD=miniominio
+  #   command: server /data --console-address ":9001"
+  #   ports:
+  #     - 9000:9000
+  #     - 9001:9001
+
+volumes:
+  postgres-data:
+  gamecafe-data:
+  # minio-data:

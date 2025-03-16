@@ -1,0 +1,59 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+<script src="{{ url_for('static', filename='js/users.js') }}"></script>
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="box">
+            <div class="table-container">
+                <table class="table is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t_user in page.items %}
+                        <tr id="tr-{{ t_user.id }}">
+                            <td>{{ t_user.username }}</td>
+                            <td>{{ t_user.email }}</td>
+                            <td>
+                                <div class="select">
+                                    <select data-userid="{{ t_user.id }}" {% if t_user == user %}disabled{% endif %}>
+                                        {% for role in t_user.Role %}
+                                        <option value="{{ role }}" {% if role == t_user.role %}selected{% endif %}>{{ role }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </td>
+                            <td>
+                                <button data-userid="{{ t_user.id }}" class="button is-danger deleteuser" {% if t_user == user %}disabled{% endif %}>
+                                    <span class="icon">
+                                        <i class="fas fa-trash"></i>
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <hr>
+
+            {% include 'fragments/paginator.jinja' %}
+        </div>
+    </div>
+
+
+</section>
+
+
+
+{% endblock content %}

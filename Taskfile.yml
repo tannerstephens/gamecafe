@@ -1,0 +1,19 @@
+version: 3
+
+tasks:
+  compose-build:
+    cmds:
+      - MY_UID="$(id -u)" MY_GID="$(id -g)" docker compose -f docker-compose.dev.yml build
+  up:
+    deps: [compose-build]
+    cmds:
+      - MY_UID="$(id -u)" MY_GID="$(id -g)" docker compose -f docker-compose.dev.yml up -d
+  down:
+    cmds:
+      - MY_UID="$(id -u)" MY_GID="$(id -g)" docker compose -f docker-compose.dev.yml down
+  make-migrations:
+    cmds:
+      - MY_UID="$(id -u)" MY_GID="$(id -g)" docker compose -f docker-compose.dev.yml run --rm gamecafe alembic revision --autogenerate
+  migrate:
+    cmds:
+      - MY_UID="$(id -u)" MY_GID="$(id -g)" docker compose -f docker-compose.dev.yml run --rm gamecafe alembic upgrade head
