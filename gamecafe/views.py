@@ -234,6 +234,10 @@ class Register(Login):
             flash("That email is taken", "danger")
             errors = True
 
+        if not User.validate_password(password):
+            flash("That password is invalid, it must be 8 or more characters", "danger")
+            errors = True
+
         if errors:
             return render_template(self.TEMPLATE_PATH)
 
