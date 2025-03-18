@@ -148,9 +148,15 @@ class User(IdModel):
         def serialize(self):
             return str(self)
 
+    class PasswordException(Exception):
+        pass
+
     __tablename__ = "users"
 
     def _set_password(self, password: str):
+        if not self.validate_password(password):
+            raise self.PasswordException()
+
         self.password_hash = self.hash_password(password)
 
     serializable = ["username", "email", "role"]
@@ -178,12 +184,14 @@ class User(IdModel):
     def hash_password(self, password: str, salt: str | bytes | None = None):
         if salt is None:
             salt = urandom(32)
+        elif isinstance(salt, str):
+            salt = bytes.fromhex(salt)
 
         key = pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
-        return salt + key
+        return salt.hex() + "|" + key.hex()
 
     def check_password(self, password: str):
-        salt = self.password_hash[:32]
+        salt = self.password_hash.split("|")[0]
 
         return self.hash_password(password, salt) == self.password_hash
 

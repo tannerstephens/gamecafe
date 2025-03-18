@@ -18,19 +18,32 @@ main {
 }
 
 .gameimage {
-    height: 480px !important;
+    max-height: 480px !important;
+    height: auto !important;
     width: auto !important;
-    display: block;
     margin-left: auto;
     margin-right: auto;
 }
 
-.card {
+.card.is-fullheight {
     height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .card-image {
-    background-color: #bdbdbd;
+    flex-grow: 1;
+}
+
+.card-image figure {
+    height: 100%;
+    background-color: #b0b0b0;
     border-top-left-radius: var(--bulma-card-radius);
     border-top-right-radius: var(--bulma-card-radius);
+    align-items: center;
+    display: flex;
+}
+
+.card-content {
+    margin-top: auto;
 }

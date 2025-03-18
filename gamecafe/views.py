@@ -197,7 +197,7 @@ class Login(FormView):
         username = request.form["username"]
         password = request.form["password"]
 
-        if (user := User.get_by_username(username)) is None or not user.validate_password(password):
+        if (user := User.get_by_username(username)) is None or not user.check_password(password):
             flash("Incorrect username or password", "danger")
             return render_template(self.TEMPLATE_PATH)
 
@@ -224,22 +224,30 @@ class Register(Login):
         password = request.form["password"]
         email = request.form["email"].lower()
 
-        errors = False
+        username_taken = email_taken = errors = False
 
         if User.get_by_username(username) is not None:
             flash("That username is taken", "danger")
             errors = True
+            username_taken = True
 
         if User.get_by_email(email) is not None:
             flash("That email is taken", "danger")
             errors = True
+            email_taken = True
 
         if not User.validate_password(password):
             flash("That password is invalid, it must be 8 or more characters", "danger")
             errors = True
 
         if errors:
-            return render_template(self.TEMPLATE_PATH)
+            return render_template(
+                self.TEMPLATE_PATH,
+                oldusername=username,
+                oldemail=email,
+                username_taken=username_taken,
+                email_taken=email_taken,
+            )
 
         User(email, username, password).save()
 

@@ -22,27 +22,21 @@
                         <div class="field">
                             <label class="label">Email</label>
                             <div class="control has-icons-left">
-                                <input class="input {% if email_taken %}is-danger{% endif %}" type="text" name="email">
+                                <input class="input {% if email_taken %}is-danger{% endif %}" type="text" name="email" value="{{ oldemail }}">
                                 <span class="icon is-small is-left">
                                     <i class="fas fa-envelope"></i>
                                 </span>
                             </div>
-                            {% if email_taken %}
-                            <p class="help is-danger">This email is not available</p>
-                            {% endif %}
                         </div>
                         <div class="field">
                             <label class="label">Username</label>
                             <div class="control has-icons-left">
                                 <input class="input {% if username_taken %}is-danger{% endif %}" type="text"
-                                    name="username">
+                                    name="username" value="{{ oldusername }}">
                                 <span class="icon is-small is-left">
                                     <i class="fas fa-user"></i>
                                 </span>
                             </div>
-                            {% if username_taken %}
-                            <p class="help is-danger">This username is not available</p>
-                            {% endif %}
                         </div>
 
                         <div class="field">
@@ -56,7 +50,7 @@
                         </div>
 
                         <div class="control">
-                            <button class="button is-primary is-fullwidth" type="submit">Register</button>
+                            <button class="button is-primary is-fullwidth" type="submit" id="submit" disabled>Register</button>
                         </div>
                     </form>
                 </div>

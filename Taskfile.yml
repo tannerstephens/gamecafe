@@ -17,3 +17,9 @@ tasks:
   migrate:
     cmds:
       - MY_UID="$(id -u)" MY_GID="$(id -g)" docker compose -f docker-compose.dev.yml run --rm gamecafe alembic upgrade head
+  psql:
+    cmds:
+      - docker compose -f docker-compose.dev.yml exec -it --env PGPASSWORD=postgres database psql -U postgres -h localhost
+  flask:
+    cmds:
+      - MY_UID="$(id -u)" MY_GID="$(id -g)" docker compose -f docker-compose.dev.yml run --rm gamecafe flask {{.CLI_ARGS}}
