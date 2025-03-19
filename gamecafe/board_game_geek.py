@@ -1,4 +1,3 @@
-import logging
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -17,11 +16,18 @@ class BoardGameGeek:
         name: str
 
     @dataclass
+    class Tag:
+        id: int
+        name: str
+        type: str
+
+    @dataclass
     class Game:
         id: int
         name: str
         image_url: str | None
         publishers: list["BoardGameGeek.Publisher"]
+        tags: list["BoardGameGeek.Tag"]
         comment: str | None = None
 
         def save_image(self, image_path: Path):
@@ -42,8 +48,10 @@ class BoardGameGeek:
 
         rc = rc or requests_cache.CachedSession(stale_if_error=True)
 
+        sleep = 2
         while (resp := rc.get(f"{cls.BASE_URL}/thing", params={"id": game_id})).status_code != 200:
-            time.sleep(5)
+            time.sleep(sleep)
+            sleep *= 2
 
         root = ET.fromstring(resp.content)
 
@@ -56,7 +64,16 @@ class BoardGameGeek:
             cls.Publisher(int(pub.attrib["id"]), pub.attrib["value"]) for pub in publishers_elements
         ]
 
-        return cls.Game(int(game_id), name, image_url, publishers)
+        tag_elements = root.findall('.//*link[@type="boardgamecategory"]') + root.findall(
+            './/*link[@type="boardgamemechanic"]'
+        )
+
+        tags = [
+            cls.Tag(int(tag.attrib["id"]), tag.attrib["value"], tag.attrib["type"])
+            for tag in tag_elements
+        ]
+
+        return cls.Game(int(game_id), name, image_url, publishers, tags)
 
     @classmethod
     def get_collection(cls, username: str, rc: requests_cache.CachedSession = None) -> list[Game]:

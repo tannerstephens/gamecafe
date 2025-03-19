@@ -1,11 +1,12 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from hashlib import pbkdf2_hmac
 from math import ceil
 from os import urandom
 from typing import Optional, Self
 
-from sqlalchemy import Column, ForeignKey, Index, Table, func, select
+from sqlalchemy import Column, ForeignKey, Index, Table, UniqueConstraint, func, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import db
@@ -34,6 +35,12 @@ class IdModel(db.Base):
                 "previous_page": self.previous_page,
                 "current_page": self.current_page,
             }
+
+    @classmethod
+    def all(cls):
+        stmt = cls.select()
+
+        return db.session.scalars(stmt).all()
 
     @classmethod
     def select(cls):
@@ -85,6 +92,21 @@ class IdModel(db.Base):
         return db.session.get(cls, oid)
 
 
+class BggItem(IdModel):
+    __abstract__ = True
+
+    bgg_id: Mapped[int] = mapped_column(unique=True)
+
+    def __init__(self, bgg_id: int):
+        self.bgg_id = bgg_id
+
+    @classmethod
+    def get_by_bgg_id(cls, bgg_id: int):
+        stmt = cls.select().where(cls.bgg_id == bgg_id)
+
+        return db.session.scalar(stmt)
+
+
 publisher_game_table = Table(
     "publisher_game_table",
     db.Base.metadata,
@@ -92,48 +114,73 @@ publisher_game_table = Table(
     Column("publisher_id", ForeignKey("publishers.id"), primary_key=True),
 )
 
+game_tag_table = Table(
+    "game_tag_table",
+    db.Base.metadata,
+    Column("game_id", ForeignKey("games.id"), primary_key=True),
+    Column("tag_id", ForeignKey("tags.id"), primary_key=True),
+)
 
-class Publisher(IdModel):
+
+class Publisher(BggItem):
     __tablename__ = "publishers"
 
     name: Mapped[str]
-    bgg_id: Mapped[int] = mapped_column(unique=True)
     games: Mapped[list["Game"]] = relationship(
         secondary=publisher_game_table, back_populates="publishers"
     )
 
-    def __init__(self, name: str, bgg_id: int):
+    def __init__(self, bgg_id: int, name: str):
+        super().__init__(bgg_id)
+
         self.name = name
-        self.bgg_id = bgg_id
-
-    @classmethod
-    def get_by_bgg_id(cls, bgg_id: int):
-        stmt = cls.select().where(cls.bgg_id == bgg_id)
-
-        return db.session.scalar(stmt)
 
 
-class Game(IdModel):
+class Tag(BggItem):
+    __tablename__ = "tags"
+
+    class Type(Enum):
+        CATEGORY = "category"
+        MECHANIC = "mechanic"
+
+        def __str__(self):
+            return self.value.capitalize()
+
+        def serialize(self):
+            return str(self)
+
+    name: Mapped[str]
+    type: Mapped[Type]
+
+    games: Mapped[list["Game"]] = relationship(secondary=game_tag_table, back_populates="tags")
+
+    UniqueConstraint("bgg_id", "type", name="uq_bgg_id_type")
+
+    def __init__(self, bgg_id, name: str, type: Type):
+        super().__init__(bgg_id)
+
+        self.name = name
+        self.type = type
+
+
+class Game(BggItem):
     __tablename__ = "games"
 
     name: Mapped[str]
-    bgg_id: Mapped[int] = mapped_column(unique=True)
     publishers: Mapped[list[Publisher]] = relationship(
         secondary=publisher_game_table, back_populates="games"
     )
-    image_path: Mapped[str] = mapped_column(nullable=True)
-    location: Mapped[str] = mapped_column(nullable=True)
+    image_path: Mapped[Optional[str]]
+    location: Mapped[Optional[str]]
 
-    def __init__(self, name: str, bgg_id: int, image_path: str | None):
+    last_updated: Mapped[datetime] = mapped_column(server_default=func.now())
+    tags: Mapped[list[Tag]] = relationship(secondary=game_tag_table, back_populates="games")
+
+    def __init__(self, bgg_id: int, name: str, image_path: str | None):
+        super().__init__(bgg_id)
+
         self.name = name
-        self.bgg_id = bgg_id
         self.image_path = image_path
-
-    @classmethod
-    def get_by_bgg_id(cls, bgg_id: int):
-        stmt = cls.select().where(cls.bgg_id == bgg_id)
-
-        return db.session.scalar(stmt)
 
 
 class User(IdModel):
@@ -161,9 +208,9 @@ class User(IdModel):
 
     serializable = ["username", "email", "role"]
 
-    username: Mapped[str] = mapped_column(nullable=False)
-    email: Mapped[str] = mapped_column(nullable=False)
-    password_hash: Mapped[str] = mapped_column(nullable=False)
+    username: Mapped[str]
+    email: Mapped[str]
+    password_hash: Mapped[str]
 
     role: Mapped[Role] = mapped_column(nullable=False, default=Role.USER)
 
