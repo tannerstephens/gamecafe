@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       - DATABASE_URI=postgresql+psycopg://postgres:changeme@database:5432/postgres
-      - SECRET_KEY=2Fn9RuBZ7VfbQPqFGOPt4MsxD3y51g0d
+      - SECRET_KEY=
     volumes:
       - gamecafe-data:/data
     ports:

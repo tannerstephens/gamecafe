@@ -37,7 +37,7 @@ main {
 
 .card-image figure {
     height: 100%;
-    background-color: #b0b0b0;
+    background-color: #c7c7c7;
     border-top-left-radius: var(--bulma-card-radius);
     border-top-right-radius: var(--bulma-card-radius);
     align-items: center;

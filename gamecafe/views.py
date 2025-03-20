@@ -3,7 +3,7 @@ from typing import Callable
 from flask import Flask, flash, jsonify, redirect, render_template, request, send_file
 from flask.views import MethodView
 
-from .models import Game, User
+from .models import Game, Report, User, db
 from .session import clear_user, get_user, set_user
 
 CACHE_UNINITIALIZED = "cache_uninitialized"
@@ -14,21 +14,14 @@ class RoleView(MethodView):
     ROUTE: str = None
 
     AUTHENTICATED: bool = False
-    ADMIN_ONLY: bool = False
-
-    ALLOWED_ROLES: list[User.Role] | None = None
+    MINIMUM_ROLE: User.Role | None = None
 
     @classmethod
     def user_allowed(cls):
-        if (cls.AUTHENTICATED or cls.ADMIN_ONLY or cls.ALLOWED_ROLES) and (
-            user := get_user()
-        ) is None:
+        if (cls.AUTHENTICATED or cls.MINIMUM_ROLE) and (user := get_user()) is None:
             return False
 
-        if (cls.ADMIN_ONLY) and not user.admin:
-            return False
-
-        if cls.ALLOWED_ROLES is not None and user.role not in cls.ALLOWED_ROLES:
+        if cls.MINIMUM_ROLE is not None and user.role < cls.MINIMUM_ROLE:
             return False
 
         return True
@@ -260,7 +253,7 @@ class Users(PageView):
     TEMPLATE_PATH = "pages/users.jinja"
     ROUTE = "/users"
 
-    ALLOWED_ROLES = [User.Role.ADMIN]
+    MINIMUM_ROLE = User.Role.ADMIN
 
     def get_template_context(self):
         return dict(page=User.paginate(self.page_num(), 10))
@@ -269,7 +262,7 @@ class Users(PageView):
 class UsersApi(ApiView):
     ROUTE = "/api/users"
 
-    ALLOWED_ROLES = [User.Role.ADMIN]
+    MINIMUM_ROLE = User.Role.ADMIN
 
     @classmethod
     def update(cls, key):
@@ -296,12 +289,27 @@ class UsersApi(ApiView):
         user.delete()
 
 
-class Games(PageView):
+class GamesView(PageView):
     TEMPLATE_PATH = "pages/games.jinja"
     ROUTE = "/games"
 
     def get_template_context(self):
         return dict(page=Game.paginate(self.page_num(), 12))
+
+
+class GamesApi(ApiView):
+    ROUTE = "/api/games"
+
+    @classmethod
+    def list(cls):
+        query = request.args.get("q")
+
+        stmt = Game.select()
+
+        if query:
+            stmt = stmt.where(Game.name.regexp_match(query, "i"))
+
+        return Game.paginate(cls.page_num(), 20, stmt=stmt)
 
 
 class GameImage(RoleView):
@@ -312,3 +320,41 @@ class GameImage(RoleView):
             return render_template("pages/404.jinja")
 
         return send_file(game.image_path, mimetype="image/png")
+
+
+class ReportForm(FormView):
+    ROUTE = "/report"
+    TEMPLATE_PATH = "pages/make-report.jinja"
+
+    def handle_form_submission(self):
+        game_id = int(request.form["id"])
+        description = request.form.get("description", "")
+        title = request.form.get("title", "")
+
+        if game_id == -1:
+            game_name = title
+            game = None
+        else:
+            if (game := Game.get_by_id(game_id)) is None:
+                raise Exception()
+
+            game_name = game.name
+
+        new_report = Report(game_name, description)
+        new_report.game = game
+
+        new_report.save()
+
+        flash("Thank you for your report!", "success")
+
+        return redirect("/")
+
+
+class ReportsView(PageView):
+    ROUTE = "/reports"
+    TEMPLATE_PATH = "pages/reports.jinja"
+
+    MINIMUM_ROLE = User.Role.EDITOR
+
+    def get_template_context(self):
+        return {"page": Report.paginate(self.page_num(), 15)}

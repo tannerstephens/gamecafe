@@ -1,0 +1,46 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+<script src="{{ url_for('static', filename='js/report.js') }}"></script>
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-two-thirds-desktop">
+                <div class="box">
+                    <form id="issue-form" method="post">
+                        <div class="field">
+                            <label class="label">Game Name</label>
+                            <div class="control">
+                                <input id="select" placeholder="Monopoly" name="id">
+                            </div>
+                        </div>
+
+                        <input class="is-hidden" name="title">
+
+                        <div class="field">
+                            <label class="label">Description</label>
+                            <div class="control">
+                                <textarea class="textarea" placeholder="All of the hotels are missing!" name="description"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="field is-grouped">
+                            <div class="control">
+                                <button class="button is-primary" id="submit" type="submit" disabled>Submit</button>
+                            </div>
+                            <div class="control">
+                                <a class="button is-danger is-light" href="/">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

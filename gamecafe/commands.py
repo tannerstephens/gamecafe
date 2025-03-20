@@ -15,11 +15,11 @@ root_image_path = Path(current_app.config.get("IMAGE_STORAGE_ROOT"))
 
 def get_publishers(bgg_publishers: list[BoardGameGeek.Publisher]) -> list[Publisher]:
     pubs = []
-    for publisher in bgg_publishers:
-        if (pub := Publisher.get_by_bgg_id(publisher.id)) is None:
-            pub = Publisher(publisher.id, publisher.name).save(commit=False)
+    for bgg_publisher in bgg_publishers:
+        if (publisher := Publisher.get_by_bgg_id(bgg_publisher.id)) is None:
+            publisher = Publisher(bgg_publisher.id, bgg_publisher.name).save(commit=False)
 
-        pubs.append(pub)
+        pubs.append(publisher)
 
     return pubs
 
@@ -53,15 +53,15 @@ def import_collection(username):
             image_path = game.save_image(root_image_path / uuid4().hex)
             image_path = str(image_path) if image_path else None
 
-            bgg_game = Game(game.id, game.name, image_path)
+            game = Game(game.id, game.name, image_path)
 
-            if game.comment:
-                bgg_game.location = game.comment
+            if bgg_game.comment:
+                game.location = game.comment
 
-            bgg_game.publishers = get_publishers(game.publishers)
-            bgg_game.tags = get_tags(game.tags)
+        game.publishers = get_publishers(game.publishers)
+        game.tags = get_tags(game.tags)
 
-            bgg_game.save()
+        game.save()
 
 
 @commands.cli.command("update-games")

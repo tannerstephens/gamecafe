@@ -45,6 +45,11 @@
             </div>
 
             <div class="navbar-end">
+                {% if user is not none and user.role >= user.Role.EDITOR %}
+                <a class="navbar-item" href="/reports">
+                    View Reported Issues
+                </a>
+                {% endif %}
                 <a class="navbar-item" href="/report">
                     Report a Game Issue
                 </a>

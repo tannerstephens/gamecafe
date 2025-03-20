@@ -1,0 +1,36 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="box">
+            <div class="table-container">
+                <table class="table is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Game</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in page.items %}
+                        <tr>
+                            <td>{{ report.game_name }}</td>
+                            <td>{{ report.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <hr>
+            {% include 'fragments/paginator.jinja' %}
+        </div>
+    </div>
+</section>
+
+
+
+{% endblock content %}

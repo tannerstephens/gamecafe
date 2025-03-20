@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 from hashlib import pbkdf2_hmac
 from math import ceil
 from os import urandom
@@ -14,8 +14,6 @@ from .database import db
 
 class IdModel(db.Base):
     __abstract__ = True
-
-    serializable: list[str] = ["id"]
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -54,8 +52,11 @@ class IdModel(db.Base):
         return res[0]
 
     @classmethod
-    def paginate(cls, page: int, per_page: int) -> Page[Self]:
-        stmt = cls.select().order_by(cls.id).offset((page - 1) * per_page).limit(per_page)
+    def paginate(cls, page: int, per_page: int, stmt=None) -> Page[Self]:
+        if stmt is None:
+            stmt = cls.select()
+
+        stmt = stmt.order_by(cls.id).offset((page - 1) * per_page).limit(per_page)
 
         items = db.session.scalars(stmt).all()
 
@@ -71,7 +72,7 @@ class IdModel(db.Base):
         )
 
     def serialize(self):
-        return {key: getattr(self, key) for key in self.serializable}
+        raise NotImplementedError()
 
     def save(self, commit=True):
         db.session.add(self)
@@ -135,6 +136,9 @@ class Publisher(BggItem):
 
         self.name = name
 
+    def serialize(self):
+        return {"name": self.name, "games": [game.id for game in self.games]}
+
 
 class Tag(BggItem):
     __tablename__ = "tags"
@@ -176,21 +180,47 @@ class Game(BggItem):
     last_updated: Mapped[datetime] = mapped_column(server_default=func.now())
     tags: Mapped[list[Tag]] = relationship(secondary=game_tag_table, back_populates="games")
 
+    reports: Mapped[list["Report"]] = relationship(back_populates="game")
+
     def __init__(self, bgg_id: int, name: str, image_path: str | None):
         super().__init__(bgg_id)
 
         self.name = name
         self.image_path = image_path
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "bgg_id": self.bgg_id,
+            "name": self.name,
+            "location": self.location,
+            "publishers": [publisher.id for publisher in self.publishers],
+            "tags": [tag.id for tag in self.tags],
+        }
+
+
+class Report(IdModel):
+    __tablename__ = "reports"
+
+    game_id: Mapped[Optional[int]] = mapped_column(ForeignKey("games.id"))
+    game: Mapped["Game"] = relationship(back_populates="reports")
+
+    game_name: Mapped[str]
+    description: Mapped[str]
+
+    def __init__(self, game_name: str, description: str):
+        self.game_name = game_name
+        self.description = description
+
 
 class User(IdModel):
-    class Role(Enum):
-        USER = "user"
-        EDITOR = "editor"
-        ADMIN = "admin"
+    class Role(IntEnum):
+        USER = 0
+        EDITOR = 10
+        ADMIN = 100
 
         def __str__(self):
-            return self.value.capitalize()
+            return self.name.capitalize()
 
         def serialize(self):
             return str(self)
@@ -205,8 +235,6 @@ class User(IdModel):
             raise self.PasswordException()
 
         self.password_hash = self.hash_password(password)
-
-    serializable = ["username", "email", "role"]
 
     username: Mapped[str]
     email: Mapped[str]
@@ -256,6 +284,14 @@ class User(IdModel):
 
     def __repr__(self):
         return f"<User: {self.username}>"
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "role": str(self.role),
+        }
 
 
 user_username_index = Index("user_username_idx", func.lower(User.username), unique=True)
