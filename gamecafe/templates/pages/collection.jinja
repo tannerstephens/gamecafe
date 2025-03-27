@@ -1,0 +1,34 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="box">
+            <h1 class="title">{{ collection.name }}</h1>
+            <h2 class="subtitle">{{ collection.games | length }} Games</h2>
+
+            <div class="content">
+                <p>{{ collection.description }}</p>
+            </div>
+
+            {% if user is not none and user.role >= user.Role.EDITOR %}
+            <a href="/collections/{{ collection.id }}/edit" class="button is-danger is-light">Edit This Collection</a>
+            {% endif %}
+
+            <a class="button is-link" href="/collections">
+                <span class="icon">
+                    <i class="fas fa-chevron-left"></i>
+                </span>
+                <span>Go Back</span>
+            </a>
+        </div>
+
+        {% with games=collection.games %}
+            {% include "fragments/game-cards.jinja" %}
+        {% endwith %}
+    </div>
+</section>
+{% endblock content %}

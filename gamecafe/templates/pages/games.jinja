@@ -20,36 +20,9 @@
             </div>
         </div>
 
-        <div class="columns is-multiline">
-            {% for game in page.items %}
-            <div class="column is-one-quarter-widescreen is-one-third-desktop is-half-tablet">
-                <div class="card is-fullheight">
-                    <div class="card-image">
-                        <figure class="image">
-                        <img
-                            src="/games/{{ game.bgg_id }}/image"
-                            alt="{{ game.name }} Image"
-                            class="gameimage"
-                            loading="lazy"
-                        />
-                        </figure>
-                    </div>
-                    <div class="card-content">
-                        <h2 class="title is-4">{{ game.name }}</h2>
-                        <div class="tags">
-                            {% for tag in game.tags[:2] %}
-                            <button class="tag is-primary is-light">{{ tag.name }}</button>
-                            {% endfor %}
-                            {% set tags_length = (game.tags|length) %}
-                            {% if tags_length > 2 %}
-                            <button class="tag">+ {{ tags_length - 2}} More</button>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+        {% with games=page.items %}
+            {% include "fragments/game-cards.jinja" %}
+        {% endwith %}
 
         <div class="box">
         {% include 'fragments/paginator.jinja' %}

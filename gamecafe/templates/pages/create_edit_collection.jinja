@@ -1,0 +1,62 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+<script src="{{ url_for('static', filename='js/create_edit_collection.js') }}"></script>
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-two-thirds-desktop">
+                <div class="box">
+                    <form id="collection-form" method="post">
+                        <div class="field">
+                            <label class="label">Collection Name</label>
+                            <div class="control">
+                                <input class="input" type="text" name="name" {% if collection %}value="{{ collection.name }}"{% endif %}>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Description</label>
+                            <div class="control">
+                                <textarea class="textarea" name="description">{% if collection %}{{ collection.description }}{% endif %}</textarea>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <div class="control">
+                                <label class="checkbox">
+                                    <input type="checkbox" {% if collection and collection.highlighted %}checked{% endif %} name="highlight">
+                                    Highlight collection on front page
+                                </label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Games</label>
+                            <div class="control">
+                                <select id="select" name="games" multiple>
+                                {% if collection %}
+                                {% for game in collection.games %}
+                                    <option value="{{ game.id }}" selected>{{ game.name }}</option>
+                                {% endfor %}
+                                {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field is-grouped">
+                            <div class="control">
+                                <button class="button is-primary" id="submit" type="submit" disabled>Submit</button>
+                            </div>
+                            <div class="control">
+                                <a class="button is-danger is-light" href="/collections{% if collection %}/{{ collection.id }}{% endif %}">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

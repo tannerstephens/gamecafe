@@ -1,13 +1,12 @@
 window.addEventListener("load", () => {
-  const form = document.getElementById("issue-form");
+  const form = document.getElementById("collection-form");
 
-  form["id"].value = null;
+  const submitButton = document.getElementById("submit");
 
-  const ts = new TomSelect("#select", {
+  new TomSelect("#select", {
     valueField: "id",
     labelField: "name",
     searchField: "name",
-    maxItems: 1,
     preload: "focus",
     load: (query, callback) => {
       let q = "";
@@ -24,10 +23,8 @@ window.addEventListener("load", () => {
     create: false,
   });
 
-  const submitButton = document.getElementById("submit");
-
   form.oninput = () => {
-    submitButton.disabled = !form["id"].value;
+    submitButton.disabled = !form["name"].value;
   };
 
   form.onsubmit = () => {

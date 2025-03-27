@@ -6,7 +6,16 @@ from math import ceil
 from os import urandom
 from typing import Optional, Self
 
-from sqlalchemy import Column, ForeignKey, Index, Table, UniqueConstraint, func, select
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Index,
+    Table,
+    UniqueConstraint,
+    func,
+    select,
+    update,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import db
@@ -182,6 +191,10 @@ class Game(BggItem):
 
     reports: Mapped[list["Report"]] = relationship(back_populates="game")
 
+    collections: Mapped[list["Collection"]] = relationship(
+        secondary="collection_games", back_populates="games"
+    )
+
     def __init__(self, bgg_id: int, name: str, image_path: str | None):
         super().__init__(bgg_id)
 
@@ -197,6 +210,38 @@ class Game(BggItem):
             "publishers": [publisher.id for publisher in self.publishers],
             "tags": [tag.id for tag in self.tags],
         }
+
+
+class Collection(IdModel):
+    __tablename__ = "collections"
+
+    name: Mapped[str]
+    games: Mapped[list[Game]] = relationship(
+        secondary="collection_games", back_populates="collections"
+    )
+    description: Mapped[Optional[str]]
+    highlighted: Mapped[bool] = mapped_column(server_default="false")
+
+    def __init__(self, name: str, description: Optional[str] = None):
+        self.name = name
+        self.description = description
+
+    def highlight(self):
+        stmt = update(Collection).values(highlighted=(Collection.id == self.id))
+        db.session.execute(stmt)
+
+    @classmethod
+    def get_highlighted_collection(cls):
+        stmt = cls.select().where(cls.highlighted == True).limit(1)
+
+        return db.session.scalar(stmt)
+
+
+class CollectionGame(db.Base):
+    __tablename__ = "collection_games"
+
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id"), primary_key=True)
+    collection_id: Mapped[int] = mapped_column(ForeignKey("collections.id"), primary_key=True)
 
 
 class Report(IdModel):

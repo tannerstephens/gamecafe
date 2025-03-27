@@ -1,9 +1,47 @@
 {% extends "_base.jinja" %}
 {% block header %}
+<script src=" https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.24/dist/js/bulma-carousel.min.js "></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+<link href=" https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.24/dist/css/bulma-carousel.min.css " rel="stylesheet">
 {% endblock header %}
 {% block content %}
 <section class="section">
-    <h1 class="title">Hello World!</h1>
+    <div class="container is-clipped">
+        <div class="box">
+            {% if collection is none %}
+                <h1 class="title">Highlight a collection here!</h1>
+            {% else %}
+                <h1 class="title">{{ collection.name }}</h1>
+                <div class="carousel" id="game-carousel">
+                    {% for game in collection.games %}
+                    <div class="card is-fullheight mx-1">
+                        <div class="card-image">
+                            <figure class="image">
+                            <img
+                                src="/games/{{ game.bgg_id }}/image"
+                                alt="{{ game.name }} Image"
+                                class="gameimage"
+                                loading="lazy"
+                            />
+                            </figure>
+                        </div>
+                        <div class="card-content">
+                            <h2 class="title is-4">{{ game.name }}</h2>
+                            <div class="tags">
+                                {% for tag in game.tags[:2] %}
+                                <button class="tag is-primary is-light">{{ tag.name }}</button>
+                                {% endfor %}
+                                {% set tags_length = (game.tags|length) %}
+                                {% if tags_length > 2 %}
+                                <button class="tag">+ {{ tags_length - 2}} More</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </section>
 {% endblock content %}

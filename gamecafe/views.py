@@ -1,12 +1,20 @@
 from typing import Callable
 
-from flask import Flask, flash, jsonify, redirect, render_template, request, send_file
+from flask import (
+    Flask,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+)
 from flask.views import MethodView
 
-from .models import Game, Report, User, db
+from .models import Collection, Game, Report, User, db
 from .session import clear_user, get_user, set_user
 
-CACHE_UNINITIALIZED = "cache_uninitialized"
 USER_ID = "user_id"
 
 
@@ -18,7 +26,7 @@ class RoleView(MethodView):
 
     @classmethod
     def user_allowed(cls):
-        if (cls.AUTHENTICATED or cls.MINIMUM_ROLE) and (user := get_user()) is None:
+        if (cls.AUTHENTICATED or cls.MINIMUM_ROLE is not None) and (user := get_user()) is None:
             return False
 
         if cls.MINIMUM_ROLE is not None and user.role < cls.MINIMUM_ROLE:
@@ -29,6 +37,11 @@ class RoleView(MethodView):
     @classmethod
     def page_num(cls):
         return max(int(request.args.get("p", 1)), 1)
+
+    @classmethod
+    def per_page(cls, default=12):
+        per_page = int(request.args.get("per_page", default))
+        return min(max(per_page, 1), 50)
 
     def dispatch_request(self, **kwargs):
         if not self.user_allowed():
@@ -49,7 +62,13 @@ class RoleView(MethodView):
 
     @classmethod
     def register_all_subviews(cls, app: Flask):
+        registered = set()
+
         for subview in cls._get_subviews():
+            if subview in registered:
+                continue
+
+            registered.add(subview)
             if subview.ROUTE is not None:
                 subview._register(app)
 
@@ -57,28 +76,23 @@ class RoleView(MethodView):
 class PageView(RoleView):
     TEMPLATE_PATH: str = None
 
-    def __init__(self):
-        super().__init__()
-
-        self._current_user_cache = CACHE_UNINITIALIZED
-
-    def get_template_context(self):
+    def get_template_context(self, *args, **kwargs):
         return {}
 
-    def get(self):
+    def get(self, *args, **kwargs):
         if self.TEMPLATE_PATH is None:
             raise NotImplementedError("`TEMPLATE_PATH` must be defined")
 
-        template_context = self.get_template_context()
+        template_context = self.get_template_context(*args, **kwargs)
 
         return render_template(self.TEMPLATE_PATH, **template_context)
 
 
 class FormView(PageView):
-    def post(self):
-        return self.handle_form_submission()
+    def post(self, *args, **kwargs):
+        return self.handle_form_submission(*args, **kwargs)
 
-    def handle_form_submission(self):
+    def handle_form_submission(self, *args, **kwargs):
         raise NotImplementedError()
 
 
@@ -175,6 +189,9 @@ class Home(PageView):
     TEMPLATE_PATH = "pages/home.jinja"
     ROUTE = "/"
 
+    def get_template_context(self, *args, **kwargs):
+        return dict(collection=Collection.get_highlighted_collection())
+
 
 class Login(FormView):
     TEMPLATE_PATH = "pages/login.jinja"
@@ -186,7 +203,7 @@ class Login(FormView):
 
         return super().get()
 
-    def handle_form_submission(self):
+    def handle_form_submission(self, *args, **kwargs):
         username = request.form["username"]
         password = request.form["password"]
 
@@ -202,7 +219,7 @@ class Login(FormView):
 class Logout(PageView):
     ROUTE = "/logout"
 
-    def get(self):
+    def get(self, *args, **kwargs):
         clear_user()
         flash("You have been logged out", "success")
         return redirect("/")
@@ -212,7 +229,7 @@ class Register(Login):
     TEMPLATE_PATH = "pages/register.jinja"
     ROUTE = "/register"
 
-    def handle_form_submission(self):
+    def handle_form_submission(self, *args, **kwargs):
         username = request.form["username"]
         password = request.form["password"]
         email = request.form["email"].lower()
@@ -255,7 +272,7 @@ class Users(PageView):
 
     MINIMUM_ROLE = User.Role.ADMIN
 
-    def get_template_context(self):
+    def get_template_context(self, *args, **kwargs):
         return dict(page=User.paginate(self.page_num(), 10))
 
 
@@ -272,7 +289,7 @@ class UsersApi(ApiView):
         if (user := User.get_by_id(key)) is None:
             raise ApiError("Not Found", 404)
 
-        user.role = user.Role(new_role.lower())
+        user.role = user.Role[new_role.upper()]
 
         user.save()
 
@@ -293,8 +310,97 @@ class GamesView(PageView):
     TEMPLATE_PATH = "pages/games.jinja"
     ROUTE = "/games"
 
-    def get_template_context(self):
+    def get_template_context(self, *args, **kwargs):
         return dict(page=Game.paginate(self.page_num(), 12))
+
+
+class ListCollections(PageView):
+    TEMPLATE_PATH = "pages/collections.jinja"
+    ROUTE = "/collections"
+
+    def get_template_context(self, *args, **kwargs):
+        return dict(page=Collection.paginate(self.page_num(), self.per_page()))
+
+
+class NewCollection(FormView):
+    TEMPLATE_PATH = "pages/create_edit_collection.jinja"
+    ROUTE = "/collections/new"
+
+    MINIMUM_ROLE = User.Role.EDITOR
+
+    def handle_form_submission(self, *args, **kwargs):
+        name = request.form["name"]
+        description = request.form.get("description")
+        highlighted = request.form.get("highlight", "off") == "on"
+
+        game_ids = [int(gid) for gid in request.form.getlist("games")]
+
+        new_collection = Collection(name, description).save(commit=False)
+
+        if highlighted:
+            new_collection.highlight()
+
+        for game_id in game_ids:
+            game = Game.get_by_id(game_id)
+
+            if game:
+                new_collection.games.append(game)
+
+        new_collection.save()
+
+        flash("Collection created", "success")
+
+        return redirect(f"/collections/{new_collection.id}")
+
+
+class ViewCollection(PageView):
+    TEMPLATE_PATH = "pages/collection.jinja"
+    ROUTE = "/collections/<int:collection_id>"
+
+    def get_template_context(self, collection_id: int, *args, **kwargs):
+        collection = Collection.get_by_id(collection_id)
+
+        return dict(collection=collection)
+
+
+class EditCollection(ViewCollection, FormView):
+    TEMPLATE_PATH = "pages/create_edit_collection.jinja"
+    ROUTE = "/collections/<int:collection_id>/edit"
+
+    MINIMUM_ROLE = User.Role.EDITOR
+
+    def handle_form_submission(self, collection_id: int, *args, **kwargs):
+        name = request.form["name"]
+        description = request.form.get("description")
+        highlighted = request.form.get("highlight", "off") == "on"
+
+        game_ids = [int(gid) for gid in request.form.getlist("games")]
+
+        collection = Collection.get_by_id(collection_id)
+
+        collection.name = name
+        collection.description = description
+
+        if highlighted and not collection.highlighted:
+            collection.highlight()
+        else:
+            collection.highlighted = highlighted
+
+        games = []
+
+        for game_id in game_ids:
+            game = Game.get_by_id(game_id)
+
+            if game:
+                games.append(game)
+
+        collection.games = games
+
+        collection.save()
+
+        flash("Collection updated successfully", "success")
+
+        return redirect(f"/collections/{collection.id}")
 
 
 class GamesApi(ApiView):
@@ -309,7 +415,7 @@ class GamesApi(ApiView):
         if query:
             stmt = stmt.where(Game.name.regexp_match(query, "i"))
 
-        return Game.paginate(cls.page_num(), 20, stmt=stmt)
+        return Game.paginate(cls.page_num(), cls.per_page(), stmt=stmt)
 
 
 class GameImage(RoleView):
@@ -326,7 +432,7 @@ class ReportForm(FormView):
     ROUTE = "/report"
     TEMPLATE_PATH = "pages/make-report.jinja"
 
-    def handle_form_submission(self):
+    def handle_form_submission(self, *args, **kwargs):
         game_id = int(request.form["id"])
         description = request.form.get("description", "")
         title = request.form.get("title", "")
@@ -356,5 +462,5 @@ class ReportsView(PageView):
 
     MINIMUM_ROLE = User.Role.EDITOR
 
-    def get_template_context(self):
+    def get_template_context(self, *args, **kwargs):
         return {"page": Report.paginate(self.page_num(), 15)}

@@ -1,0 +1,39 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+<script src="{{ url_for('static', filename='js/collections.js') }}"></script>
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-multiline">
+            {% for collection in page.items %}
+            <div class="column is-one-quarter-widescreen is-one-third-desktop is-half-tablet">
+                <a href="/collections/{{ collection.id }}">
+                    <div class="card is-fullheight">
+                        <div class="card-content">
+                            <h2 class="title is-4">{{ collection.name }}</h2>
+                            <h3 class="subtitle is-6">{{ collection.games | length }} Games</h3>
+
+                            <div class="content">
+                                <p>{{ collection.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="box">
+            {% include 'fragments/paginator.jinja' %}
+        </div>
+    </div>
+
+
+</section>
+
+
+
+{% endblock content %}
