@@ -3,17 +3,21 @@
     <div class="column is-one-quarter-widescreen is-one-third-desktop is-half-tablet">
         <div class="card is-fullheight">
             <div class="card-image">
-                <figure class="image">
-                <img
-                    src="/games/{{ game.bgg_id }}/image"
-                    alt="{{ game.name }} Image"
-                    class="gameimage"
-                    loading="lazy"
-                />
-                </figure>
+                <a href="/game/{{ game.id }}">
+                    <figure class="image">
+                    <img
+                        src="/games/{{ game.bgg_id }}/image"
+                        alt="{{ game.name }} Image"
+                        class="gameimage"
+                        loading="lazy"
+                    />
+                    </figure>
+                </a>
             </div>
             <div class="card-content">
-                <h2 class="title is-4">{{ game.name }}</h2>
+                <a href="/game/{{ game.id }}">
+                    <h2 class="title is-4">{{ game.name }}</h2>
+                </a>
                 <div class="tags">
                     {% for tag in game.tags[:2] %}
                     <button class="tag is-primary is-light">{{ tag.name }}</button>

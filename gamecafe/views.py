@@ -353,6 +353,16 @@ class NewCollection(FormView):
         return redirect(f"/collections/{new_collection.id}")
 
 
+class GameView(PageView):
+    TEMPLATE_PATH = "pages/game.jinja"
+    ROUTE = "/game/<int:game_id>"
+
+    def get_template_context(self, game_id: int, *args, **kwargs):
+        game = Game.get_by_id(game_id)
+
+        return dict(game=game)
+
+
 class ViewCollection(PageView):
     TEMPLATE_PATH = "pages/collection.jinja"
     ROUTE = "/collections/<int:collection_id>"

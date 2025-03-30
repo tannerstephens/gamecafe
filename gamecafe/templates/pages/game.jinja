@@ -1,0 +1,57 @@
+{% extends "_base.jinja" %}
+
+{% block header %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+
+<style>
+.infogrid {
+  display: grid;
+  grid-template-columns:  100px auto;
+}
+</style>
+{% endblock header %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="box">
+            <h1 class="title">{{ game.name }}</h1>
+
+            <figure class="image">
+            <img
+                src="/games/{{ game.bgg_id }}/image"
+                alt="{{ game.name }} Image"
+                class="gameimage"
+                loading="lazy"
+            />
+            </figure>
+            
+            <div class=infogrid>
+                <div><h1>Location: </h1> </div>
+                <div>{{ game.location }}</div>
+
+                <div>Player count:</div> 
+                <div>0 - inf</div>
+
+                <div>Publisher:</div>
+                <div>
+                {% if game.publishers|length > 0 %}
+                        {% with publisher=game.publishers %}
+                             <span>{{ publisher.name }} </span>
+                        {% endwith %}
+                {% endif %}
+                </div>
+
+                <div>Tags : </div>
+                <div>
+                    {% with tag=game.tags %}
+                        {% if tag.name %}
+                            <span class="tag is-info is-medium" >{{ tag.name }}</div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
