@@ -47,3 +47,12 @@ main {
 .card-content {
     margin-top: auto;
 }
+
+.card-content.game-info {
+    margin-top: 0px;
+}
+
+.infogrid {
+  display: grid;
+  grid-template-columns:  100px auto;
+}
